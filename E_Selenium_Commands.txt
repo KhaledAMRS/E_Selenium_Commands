@@ -1,0 +1,299 @@
+1- Browser
+
+
+	1.1- driver.manage() 
+	
+		1.1.1-
+		    driver.manage().window().maximize();
+
+
+		1.1.2- 
+			driver.manage().timeouts().implicitlyWait(7, TimeUnit.SECONDS);
+
+			
+	* The Implicit Wait in Selenium is used to tell the web driver to wait for a certain amount of time as long as the element still not present in DOM Page 
+
+	* The mechanism is to check if the element is present in DOM Page every 0.5 second, if the element is present in DOM Page then the code will proceed without having to wait the whole timeout assigned
+	  for example, if the element is present in DOM Page after 2 seconds, the code won't have to wait all the 7 seconds 
+						
+	* if the element still not exist in DOM page after the timeout using (findElement not findElements) then the code will throw a “No Such Element Exception” error and the test case will be failed.
+		In case of using findElements >> No error will be thrown and output will be empty  which means size() = zero
+
+	* Note 1: it's not preferred to use large number like
+	driver.manage().timeouts().implicitlyWait(100, TimeUnit.SECONDS);
+	because if any element is not exist in DOM page for any out of hand reason >> that means your test case will wait 100 seconds before it fails
+
+
+	* Beside ImplicitlyWait there's also another thing in Selenium called explicitlyWait which will be discussed later in the project
+	Each one has its own usage and we are using both in Automation.
+	ImplicitlyWait & ExplicitlyWait are reducing the needs to use Thread.sleep in the code but don't eliminate it, which means we still need to use Thread.sleep but within a small range
+	
+	Thread.sleep   >> unconditional Synchronization
+	ImplicitlyWait & ExplicitlyWait  >> conditional Synchronization
+	
+	* Keep in Mind: implicitlyWait has only one condition to check which is waiting until the element is exist in DOM Page 
+	but explicitlyWait has multiple conditions unlike implicitlyWait
+			For example
+				wait unitl element is visible on UI Page
+				wait until element is clickable on UI Page
+				wait until the url of the browser to be...
+				wait until number of browser tabs to equal... 
+				
+				We will discuss it later 
+
+
+	1.2- Browser Navigate	
+	https://www.selenium.dev/documentation/webdriver/browser/navigation/
+	
+	Difference between navigate(), get()?
+	
+	Each one has an advantage and we simply could mix between them to get the best.
+
+		- Advantage of navigate() is that it contains the following unlike get()
+		driver.navigate().back();
+		driver.navigate().forward();
+		driver.navigate().refresh();
+
+		- Advantage of get()
+		It is responsible for loading the page and waits until the page has finished loading unlike navigate().
+
+
+
+	1.3- get driver details
+
+	driver.getTitle();			//String
+	driver.getCurrentUrl();		//String 
+
+	https://www.selenium.dev/documentation/webdriver/browser/
+
+
+	
+	1.4- Adds cookies, get named cookies, delete cookies (Advanced)
+	https://www.selenium.dev/documentation/webdriver/browser/cookies/
+
+
+=================================================================================================
+2- String, By, WebElement, Action		(used to apply POM Design pattern)
+
+ 
+    driver.findElement(By.cssSelector("a[href=\"/login\"]")).click();
+
+	We could split this code to:
+
+	String locator = "a[href=\"/login\"]";
+	By loginBy = By.cssSelector(locator);
+	WebElement loginWebElement = driver.findElement(loginBy);
+	loginWebElement.click();
+	
+
+Reference: point number 5 in this link
+https://www.selenium.dev/documentation/webdriver/getting_started/first_script/
+
+
+=================================================================================================
+3- Interacting with web element
+The basic commands that can be executed on an element:
+
+click()
+sendKeys(input) 	  input could be 	 >>  String or Keys  E.X:  Keys.ENTER
+clear() 		The element clear command resets the content of an element. This requires an element to be editable, and resettable.
+	
+	Example:
+	go to http://the-internet.herokuapp.com/login > clear email and password in case they are used before > sendKeys to email and password > click on login button or you could use sendKeys(Keys.ENTER)
+
+=================================================================================================
+4- Request web element information 
+
+getText()				
+		No Input
+		output: linkText value  (DataType String)
+
+*****************************
+
+getAttribute(input)		
+		Input is the key of the attribute in DOM Page		e.x: href, class, id     
+		output: value of the key  (DataType String)
+
+	Example:
+	go to http://the-internet.herokuapp.com/login and get href value of Elemental Selenium link at the end of the page
+
+*****************************
+		
+getCssValue(input)	
+		Input is the name shown under styles tab 			e.x: background-color, border-color, color		Note: the output is RGBA and could be converted to Color.fromString(backgroundColor).asHex();
+		output: value of the key  (DataType String)
+
+	
+	Notes: 
+	- you should locate the element which its Styles contains those style property, for instance if you choose another element different than the one shown below, you will not find color or background-color
+	- the output of any color attribute is RGBA and could be converted to 	Color.fromString(backgroundColor).asHex();
+
+
+	Example:
+	go to http://the-internet.herokuapp.com/login and login with valid data then verify that success Msg background-color is #5da423 (Green  93, 164, 35, 1)
+
+
+
+Check this link for more info:
+https://www.selenium.dev/documentation/webdriver/elements/information/
+
+=================================================================================================
+5- Check Web Element Status
+
+
+isEnabled()   This method is used to check if the Element is enabled or disabled on a webpage. Returns a boolean value (True/False)
+	
+	Example
+	go to http://the-internet.herokuapp.com/dropdown and verify "Please select an option" isEnabled false (disabled)  and "Option 1" "Option 2" isEnabled true
+
+*****************************
+
+isSelected()	This method determines if the referenced Element is Selected or not. This method is widely used on Check boxes, radio buttons, input elements, and option elements.
+				Returns a boolean value (True/False)
+
+
+	Example
+	go to http://the-internet.herokuapp.com/dropdown and verify "Please select an option" isSelected true (because it's the first option selected by default)  
+	then click on "Option1" and check isSelected, it's going to be true for "Option1" and false for "Please select an option", "Option2"
+
+	Another Example
+	go to http://the-internet.herokuapp.com/checkboxes	and verify checkbox 2 isSelected true and checkbox 1 isSelected false 
+
+*****************************
+
+isDisplayed()
+		This method is used to check if the Element is displayed on a UI Page. Returns a Boolean value  True/False.
+		
+		Note: The element should be existed on DOM Page first and the developer will be able to control whether the element will be visible or Hidden on UI Page
+		
+		So what if the element is not exist on DOM Page and tester decided to use isDisplayed()
+		if the element is not exist in DOM page >> the code will throw a “No Such Element Exception”
+		org.openqa.selenium.NoSuchElementException: no such element: Unable to locate element:
+		
+		So if you want to assert that the element should be visible on UI Page then you should use assertTrue with isDisplayed()
+		
+		But if you want to assert that the element should not be visible on UI Page then there are two ways depending on the way that developer follows to make this element is not visible on UI Page
+			
+			Case1: if the developer choose to hide this element from UI but keep it in DOM Page >> you will use assertFalse with isDisplayed()
+
+			Example on Case 1: go to google "https://www.google.com/" before searching for anything, make sure thar auto suggestion section is hidden  (div[jsname="UUbT9"])
+			after that type anything in search field like "Selenium" and don't hit Enter then make sure auto suggestion section is visible now on UI Page
+
+			
+			Case2: if the developer choose to hide this element by removing this element from DOM Page >> you should not use isDisplayed() because the code will throw the error "NoSuch Element Exception" So the code wants to tell you that I couldn't find this element in DOM Page to check whether it's visible or hidden on UI Page
+			in this case we assert that the element is not exist in DOM page using findElements (not findElement) and we will discuss it later
+		
+			Example on Case2: go to http://the-internet.herokuapp.com/add_remove_elements/ and click on Add Element and verify Delete isDisplayed 
+			then click on Delete and try to use assertFalse with isDisplayed  you will get error in the code, so you need to confirm that element is removed from DOM Page using findElements()
+
+
+
+Check this link for more info
+https://www.selenium.dev/documentation/webdriver/elements/information/
+
+=================================================================================================
+6- findElements()
+
+	it's used to collect number of elements on DOM Page having the same locator (result will be more than one in when searching in DOM Page)
+    driver.findElements(By.cssSelector("input[type]")).size();
+
+	Example: go to this link http://the-internet.herokuapp.com/checkboxes
+
+	List<WebElement> inputWebElements = driver.findElements(By.cssSelector("input[type="checkbox"]"));
+	int optionCount = inputWebElements.size();
+	System.out.println(optionCount);
+
+
+
+=================================================================================================
+7- Difference between findElement(), findElements()
+
+findElement()
+				click(), sendKeys(input), getText(), 
+				getAttribute(input), getCssValue(input), isDisplayed(), isEnabled(), isSelected()
+
+
+
+findElements()
+size()					go to http://the-internet.herokuapp.com/add_remove_elements/ and click on "Add Element" 3 times and count the number of "Delete" buttons >> it should be 3
+isEmpty()			    go to http://the-internet.herokuapp.com/add_remove_elements/ and before click on "Add Element" verify that "Delete" button isEmpty  (size() = 0)
+get(index)				if you want to select an element from the list of WebElements	use get(index)  example: This is a List of WebElements [webElement1, WebElement2, WebElement3, WebElement4] and if you want to do action on WebElement1 you will use get(0) and WebElement2 you will use get(1) and so on then you do the actions specified for findElement like click(), sendKeys(), getAttribute(), etc
+
+
+***************************************
+
+Now you could realize the difference between visibility (UI) and presence (DOM)
+	1- with 	visibility >> isDisplayed >> findElement
+	2- with 	presence   >>  isEmpty is false >> findElements
+	3- It's important to remember that we couldn't do visibility is false if the element is not exist in DOM Page because the code will throw a “No Such Element Exception”
+
+
+Question: Try to think about the relation between implicitlyWait and isEmpty is true
+=================================================================================================
+
+8- Difference between static dropdown & dynamic dropdown
+	
+	Static dropdown list:	dropdowns having tagName "Select"  						
+	Dynamic dropdown list:	dropdowns having different tagName other than "Select"
+
+
+8.1- Static dropdown list:
+
+	Example: 	http://the-internet.herokuapp.com/dropdown
+
+	Method 1
+	It's the normal way, you simply click on the "option" that you want to select inside "select" list
+	
+	Method 2
+	There's a class inside selenium which allow you to handle static dropdown list
+	
+	import org.openqa.selenium.support.ui.Select;
+
+	WebElement selectElement = driver.findElement(By.id("dropdown"));
+	Select selectObject = new Select(selectElement);
+	
+
+The advantage of Method 2 over Method 1 is that Method 2 allows you to select "option" in several ways
+
+		1. Select an <option> based upon the <select> element's internal index
+		E.x:	selectObject.selectByIndex(1);		// counting start from 0 (Please select an option)  1 (Option 1)   2 (Option2)
+		
+		2. Select an <option> based upon its value attribute
+		E.x:	selectObject.selectByValue("1");	// This is an attribute where key name is value 
+		
+		3. Select an <option> based upon its text
+		E.x:	selectObject.selectByVisibleText("Option 2");		// Link Text 
+
+for more info about this class read this link https://teachyourselftestautomation.com/select-option-dropdown-selenium/
+
+
+********************************
+
+8.2- Dynamic dropdown list:
+
+	Example: "My eBay" list on the top right side, you could find it with this locator  ul[id="gh-ul-nav"]
+	https://www.ebay.com/
+
+
+
+with dynamic you won't be able to use "Select" class in selenium
+instead you could only follow Method 1 or using findElements 
+	for more info read this article https://teachyourselftestautomation.com/dynamic-dropdown-selenium/
+
+=================================================================================================
+
+9- Three Ways to Use Drivers 	(Advanced)
+https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/
+
+=================================================================================================
+10- Open browser with Selenium	(Advanced)
+https://www.selenium.dev/documentation/webdriver/getting_started/open_browser/
+https://www.selenium.dev/documentation/webdriver/getting_started/open_browser/
+
+
+capabilities
+https://www.selenium.dev/documentation/webdriver/capabilities/
+https://www.selenium.dev/documentation/webdriver/capabilities/shared/
+
+chromeoptions
+
